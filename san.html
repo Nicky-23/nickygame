@@ -145,6 +145,20 @@
       align-items: center;
     }
     .btn-secondary:hover { background: rgba(255,255,255,0.25); }
+    .btn-back-link {
+      position: absolute;
+      top: 16px; left: 16px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.8);
+      border-radius: 12px;
+      text-decoration: none;
+      z-index: 10;
+      transition: background 0.15s;
+    }
+    .btn-back-link:hover { background: rgba(255,255,255,0.22); }
 
     /* ===== あそびかた モーダル ===== */
     .modal-overlay {
@@ -995,6 +1009,7 @@
 
   <!-- ===== タイトル画面 ===== -->
   <div id="screen-title" class="screen active">
+    <a class="btn-back-link" href="index.html">🏠 もどる</a>
     <div class="title-stars" id="title-stars"></div>
     <div class="title-hero"><img src="image/san1.png" class="hero-img" alt="サン"></div>
     <div class="title-text"><span class="title-rainbow">サンの冒険</span></div>
@@ -1018,7 +1033,6 @@
       </button>
     </div>
     <div class="title-bottom">
-      <a class="btn-secondary" href="index.html">🏠 もどる</a>
       <button class="btn-secondary" id="btn-howto">📖 あそびかた</button>
       <button class="btn-secondary mute-btn" id="btn-mute-title">🔊</button>
     </div>

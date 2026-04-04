@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ガクとククの洞窟</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Kaku Gothic Pro", "ヒラギノ角ゴ Pro", "Meiryo", "メイリオ", "Yu Gothic", "游ゴシック", sans-serif;
+      background: #0d0d1a;
+      overflow: hidden;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #game {
+      width: 100%;
+      max-width: 480px;
+      height: 100dvh;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    .screen.active { display: flex; }
+
+    /* ===== 共通 ===== */
+    .btn-primary {
+      padding: 16px 40px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #f9ca24, #f0932b);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(240,147,43,0.45);
+      transition: transform 0.1s;
+      letter-spacing: 0.05em;
+    }
+    .btn-primary:hover { transform: scale(1.03); }
+    .btn-primary:active { transform: scale(0.97); }
+
+    .btn-back-link {
+      position: absolute;
+      top: 16px; left: 16px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.8);
+      border-radius: 12px;
+      text-decoration: none;
+      z-index: 10;
+      transition: background 0.15s;
+    }
+    .btn-back-link:hover { background: rgba(255,255,255,0.22); }
+
+    .kuku-advice-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 14px 18px;
+      width: 100%;
+      max-width: 340px;
+    }
+    .kuku-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .kuku-text {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.6;
+      font-weight: 600;
+      white-space: pre-line;
+    }
+
+    /* ===== タイトル ===== */
+    #screen-title {
+      background: linear-gradient(160deg, #1a1a3e 0%, #0d0d1a 100%);
+      justify-content: center;
+      gap: 20px;
+      padding: 40px 24px;
+    }
+    .title-chars { font-size: 5rem; letter-spacing: 0.2em; line-height: 1; }
+    .title-name {
+      font-size: clamp(1.4rem, 5.5vw, 2rem);
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      letter-spacing: 0.06em;
+    }
+    .title-sub {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.55);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ===== イントロ ===== */
+    #screen-intro {
+      background: linear-gradient(160deg, #1a1a3e 0%, #0d0d1a 100%);
+      justify-content: center;
+      gap: 24px;
+      padding: 40px 32px;
+    }
+    .intro-char { font-size: 5.5rem; line-height: 1; animation: bounce 1.5s ease-in-out infinite; }
+    .speech-bubble {
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 20px 24px;
+      font-size: clamp(1rem, 4vw, 1.2rem);
+      color: #fff;
+      text-align: center;
+      line-height: 1.8;
+      font-weight: 700;
+      width: 100%;
+      max-width: 340px;
+      white-space: pre-line;
+      animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-secondary {
+      padding: 14px 36px;
+      font-size: 1rem;
+      font-weight: 900;
+      background: rgba(255,255,255,0.13);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-radius: 16px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.22); transform: scale(1.03); }
+    .btn-secondary:active { transform: scale(0.97); }
+
+    /* ===== ステージ開始 ===== */
+    #screen-stage {
+      background: linear-gradient(160deg, #1a1a3e 0%, #0d0d1a 100%);
+      justify-content: center;
+      gap: 14px;
+      padding: 40px 24px;
+    }
+    .stage-num { font-size: 0.85rem; font-weight: 700; color: rgba(255,255,255,0.45); letter-spacing: 0.12em; }
+    .stage-dan {
+      font-size: clamp(2rem, 8vw, 3rem);
+      font-weight: 900;
+      color: #ffd32a;
+      letter-spacing: 0.1em;
+      text-shadow: 0 2px 10px rgba(255,211,42,0.4);
+      animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .stage-enemy-big { font-size: 4.5rem; line-height: 1; animation: bounce 1.5s ease-in-out infinite; }
+    .stage-enemy-name { font-size: 1rem; font-weight: 700; color: rgba(255,255,255,0.65); }
+
+    /* ===== バトル ===== */
+    #screen-battle {
+      background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
+      justify-content: flex-start;
+      padding: 0;
+    }
+    .battle-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 12px 20px;
+      background: rgba(0,0,0,0.25);
+      flex-shrink: 0;
+    }
+    .battle-stage-label { font-size: 0.8rem; font-weight: 700; color: rgba(255,255,255,0.45); letter-spacing: 0.1em; }
+    .hp-hearts { font-size: 1.3rem; letter-spacing: 0.04em; }
+
+    .battle-enemy-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 20px;
+      min-height: 0;
+    }
+    .battle-enemy-emoji {
+      font-size: clamp(3.5rem, 15vw, 5.5rem);
+      line-height: 1;
+      animation: bounce 1.8s ease-in-out infinite;
+    }
+    .problem-box {
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 14px 20px;
+      text-align: center;
+      width: 100%;
+      max-width: 320px;
+    }
+    .problem-display {
+      font-size: clamp(1.8rem, 7vw, 2.8rem);
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.06em;
+      line-height: 1.2;
+    }
+    .problem-hint {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 6px;
+      font-weight: 600;
+    }
+    .q-mark { color: #ffd32a; text-shadow: 0 0 8px rgba(255,211,42,0.5); }
+
+    .problem-box.correct-flash { animation: correctFlash 0.6s ease; }
+    .problem-box.wrong-flash   { animation: wrongFlash 0.6s ease; }
+
+    .battle-bottom {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      padding: 10px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .turn-progress { font-size: 0.8rem; color: rgba(255,255,255,0.45); font-weight: 700; letter-spacing: 0.1em; }
+    .hand-area { display: flex; gap: 7px; justify-content: center; }
+
+    /* ===== カード ===== */
+    .card {
+      width: 56px;
+      height: 70px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1rem, 4vw, 1.45rem);
+      font-weight: 900;
+      color: #fff;
+      cursor: pointer;
+      border: 3px solid rgba(255,255,255,0.2);
+      transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+      user-select: none;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+      flex-shrink: 0;
+    }
+    .card.selected {
+      border-color: #fff;
+      transform: translateY(-10px) scale(1.06);
+      box-shadow: 0 10px 24px rgba(255,255,255,0.3);
+    }
+    .card.correct-hint {
+      border-color: #55efc4;
+      box-shadow: 0 0 16px rgba(85,239,196,0.8);
+      transform: translateY(-6px);
+    }
+    .card-0 { background: linear-gradient(135deg, #636e72, #2d3436); }
+    .card-1 { background: linear-gradient(135deg, #ff7675, #c0392b); }
+    .card-2 { background: linear-gradient(135deg, #fd9644, #e67e22); }
+    .card-3 { background: linear-gradient(135deg, #ffd32a, #f0932b); }
+    .card-4 { background: linear-gradient(135deg, #48dbfb, #0652DD); }
+    .card-5 { background: linear-gradient(135deg, #1dd1a1, #10ac84); }
+    .card-6 { background: linear-gradient(135deg, #ff6eb4, #a40064); }
+    .card-7 { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+    .card-8 { background: linear-gradient(135deg, #6c5ce7, #341f97); }
+    .card-9 { background: linear-gradient(135deg, #fd79a8, #d63031); }
+
+    .btn-submit {
+      width: 100%;
+      max-width: 300px;
+      padding: 14px;
+      font-size: 1.1rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #f9ca24, #f0932b);
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(240,147,43,0.4);
+      transition: transform 0.1s, opacity 0.15s;
+      letter-spacing: 0.05em;
+    }
+    .btn-submit:disabled {
+      background: rgba(255,255,255,0.12);
+      box-shadow: none;
+      cursor: default;
+      opacity: 0.5;
+    }
+    .btn-submit:not(:disabled):hover { transform: scale(1.02); }
+    .btn-submit:not(:disabled):active { transform: scale(0.97); }
+
+    /* ===== クリア ===== */
+    #screen-clear {
+      background: linear-gradient(160deg, #1a1a3e 0%, #0d0d1a 100%);
+      justify-content: center;
+      gap: 20px;
+      padding: 40px 24px;
+    }
+    .clear-icon { font-size: 5rem; animation: starBurst 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .clear-title {
+      font-size: clamp(1.8rem, 7vw, 2.5rem);
+      font-weight: 900;
+      color: #ffd32a;
+      text-shadow: 0 2px 10px rgba(255,211,42,0.5);
+    }
+
+    /* ===== ゲームオーバー ===== */
+    #screen-gameover {
+      background: linear-gradient(160deg, #1a1a2e 0%, #0d0d1a 100%);
+      justify-content: center;
+      gap: 20px;
+      padding: 40px 24px;
+    }
+    .gameover-icon { font-size: 5rem; }
+    .gameover-title {
+      font-size: clamp(1.8rem, 7vw, 2.5rem);
+      font-weight: 900;
+      color: #ff7675;
+      text-shadow: 0 2px 10px rgba(255,118,117,0.5);
+    }
+
+    /* ===== エンディング ===== */
+    #screen-ending {
+      background: linear-gradient(160deg, #2d1b4e 0%, #0d0d1a 100%);
+      justify-content: center;
+      gap: 20px;
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .ending-chars { font-size: 4rem; letter-spacing: 0.3em; animation: pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .ending-title {
+      font-size: clamp(1.8rem, 7vw, 2.5rem);
+      font-weight: 900;
+      color: #ffd32a;
+      text-shadow: 0 2px 12px rgba(255,211,42,0.6);
+    }
+    .ending-text { font-size: 1rem; color: rgba(255,255,255,0.75); line-height: 1.8; font-weight: 600; }
+    .btn-ending-back {
+      display: inline-block;
+      padding: 16px 40px;
+      font-size: 1.1rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(108,92,231,0.4);
+      transition: transform 0.1s;
+    }
+    .btn-ending-back:hover { transform: scale(1.03); }
+    .btn-ending-back:active { transform: scale(0.97); }
+
+    /* ===== アニメーション ===== */
+    @keyframes pop {
+      0%   { transform: scale(0); opacity: 0; }
+      80%  { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-12px); }
+    }
+    @keyframes starBurst {
+      0%   { transform: scale(0) rotate(-20deg); }
+      70%  { transform: scale(1.25) rotate(5deg); }
+      100% { transform: scale(1) rotate(0); }
+    }
+    @keyframes correctFlash {
+      0%,100% { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+      50%     { background: rgba(85,239,196,0.35); border-color: #55efc4; }
+    }
+    @keyframes wrongFlash {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-8px); }
+      40%,80% { transform: translateX(8px); }
+    }
+  </style>
+</head>
+<body>
+<div id="game">
+
+  <!-- タイトル -->
+  <div id="screen-title" class="screen active">
+    <a class="btn-back-link" href="index.html">🏠 もどる</a>
+    <div class="title-chars">🧑🧚</div>
+    <div class="title-name">ガクとククの洞窟</div>
+    <div class="title-sub">かけざんカードで　どうくつをすすめ！</div>
+    <button class="btn-primary" id="btn-start">はじめる！</button>
+  </div>
+
+  <!-- イントロ -->
+  <div id="screen-intro" class="screen">
+    <div class="intro-char" id="intro-char"></div>
+    <div class="speech-bubble" id="intro-text"></div>
+    <button class="btn-secondary" id="btn-intro-next">つぎへ →</button>
+  </div>
+
+  <!-- ステージ開始 -->
+  <div id="screen-stage" class="screen">
+    <div class="stage-num" id="stage-num-label">STAGE 1 / 9</div>
+    <div class="stage-dan" id="stage-dan-label">1 の 段</div>
+    <div class="stage-enemy-big" id="stage-enemy-emoji">🦗</div>
+    <div class="stage-enemy-name" id="stage-enemy-name-label">コオロギ</div>
+    <div class="kuku-advice-wrap">
+      <span class="kuku-icon">🧚</span>
+      <div class="kuku-text" id="stage-kuku-advice"></div>
+    </div>
+    <button class="btn-primary" id="btn-stage-start">いくぞ！</button>
+  </div>
+
+  <!-- バトル -->
+  <div id="screen-battle" class="screen">
+    <div class="battle-top">
+      <div class="battle-stage-label" id="battle-stage-label">STAGE 1</div>
+      <div class="hp-hearts" id="hp-hearts">❤️❤️❤️</div>
+    </div>
+    <div class="battle-enemy-area">
+      <div class="battle-enemy-emoji" id="battle-enemy-emoji">🦗</div>
+      <div class="problem-box" id="problem-box">
+        <div class="problem-display" id="problem-display"></div>
+        <div class="problem-hint" id="problem-hint"></div>
+      </div>
+    </div>
+    <div class="battle-bottom">
+      <div class="turn-progress" id="turn-progress">もん 1 / 5</div>
+      <div class="hand-area" id="hand-cards"></div>
+      <button class="btn-submit" id="btn-submit" disabled>けってい！</button>
+    </div>
+  </div>
+
+  <!-- ステージクリア -->
+  <div id="screen-clear" class="screen">
+    <div class="clear-icon">🎉</div>
+    <div class="clear-title">ステージクリア！</div>
+    <div class="kuku-advice-wrap">
+      <span class="kuku-icon">🧚</span>
+      <div class="kuku-text" id="clear-kuku-text"></div>
+    </div>
+    <button class="btn-primary" id="btn-next-stage">つぎへ →</button>
+  </div>
+
+  <!-- ゲームオーバー -->
+  <div id="screen-gameover" class="screen">
+    <div class="gameover-icon">💦</div>
+    <div class="gameover-title">やられた！</div>
+    <div class="kuku-advice-wrap">
+      <span class="kuku-icon">🧚</span>
+      <div class="kuku-text">もう一かい　チャレンジだよ！<br>ガク、まけないで～！</div>
+    </div>
+    <button class="btn-primary" id="btn-retry">もういちど</button>
+  </div>
+
+  <!-- エンディング -->
+  <div id="screen-ending" class="screen">
+    <div class="ending-chars">🧑🧚💎</div>
+    <div class="ending-title">ひほう　はっけん！</div>
+    <div class="ending-text">九九のちからで<br>どうくつを　せいはした！<br>ガク、すご～い！</div>
+    <a class="btn-ending-back" href="index.html">🏠 もどる</a>
+  </div>
+
+</div>
+<script>
+// ============================================================
+// データ
+// ============================================================
+const STAGES = [
+  { dan: 1, enemy: '🦗', name: 'コオロギ' },
+  { dan: 5, enemy: '🕷️', name: 'クモ' },
+  { dan: 2, enemy: '🦟', name: 'カ' },
+  { dan: 3, enemy: '🦎', name: 'トカゲ' },
+  { dan: 4, enemy: '🦇', name: 'コウモリ' },
+  { dan: 6, enemy: '💀', name: 'スケルトン' },
+  { dan: 7, enemy: '🐍', name: 'ヘビ' },
+  { dan: 8, enemy: '🗿', name: 'ゴーレム' },
+  { dan: 9, enemy: '🐉', name: 'ドラゴン' },
+];
+
+// 各ステージのタイプA問題数（残りはタイプB）
+const TYPE_A_COUNTS = [4, 4, 4, 3, 3, 3, 2, 2, 2];
+
+const KUKU_ADVICE = [
+  '1をかけると　こたえは　そのまま！\nかんたんだよ～♪',
+  '5をかけると　5か10の　くりかえしだよ！\nリズムで　おぼえよ♪',
+  '2をかけると　2ずつ　ふえるよ～！\nいっしょに　がんばろ！',
+  '3をかけると　3ずつ　ふえるよ！\nいっしょに　おぼえよ♪',
+  '4をかけると　4ずつ　ふえるよ！\nもうちょっとだよ～！',
+  '6の段は　ちょっとむずかしいけど…\nククが　ついてるよ！',
+  '7の段…むずかしいね！\nでも　ガクなら　きっとできるよ！',
+  '8をかけると　8ずつ　ふえるよ！\nもうすこしだよ～！',
+  '9の段は　さいごだよ！\nガク、いっしょに　ファイト！',
+];
+
+const CLEAR_MESSAGES = [
+  'やったね～！\nつぎも　いっしょに　がんばろ！',
+  '5の段も　かんぺき！\nガク、すご～い！',
+  '2の段　クリア！\nもっと　おくへ　いこ！',
+  '3の段　クリア！\nドンドン　つよくなってる♪',
+  '4の段も　クリア！\nのこり4つだよ～！',
+  '6の段　クリア！\nすごいすごい！',
+  '7の段も　クリア！\nのこり2つだよ！',
+  '8の段　クリア！\nあと1つだよ！　ファイト～！',
+  '全ステージ　クリア！\nガク、さいこう～！\nわたしも　うれしい♪',
+];
+
+const INTRO_SCENES = [
+  { char: '🧚', text: 'わたし、クク！\nこのどうくつの　せいれいだよ～！' },
+  { char: '🧑', text: 'おれはガク。\nひほうを　さがしに来たぜ！' },
+  { char: '🧚', text: '九九のカードで　てきをたおして\nひほうを　みつけよ～！' },
+];
+
+// ============================================================
+// 状態
+// ============================================================
+const gs = {
+  stage: 0,
+  playerHP: 3,
+  problems: [],
+  problemIdx: 0,
+  hand: [],
+  selected: [],
+  introIdx: 0,
+  processing: false,
+};
+
+// ============================================================
+// ユーティリティ
+// ============================================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+// ============================================================
+// SE
+// ============================================================
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+function resumeAC() { if (AC.state === 'suspended') AC.resume(); }
+
+const se = {
+  _play(freq, type, dur, vol = 0.4, t = 0) {
+    resumeAC();
+    const o = AC.createOscillator();
+    const g = AC.createGain();
+    o.connect(g); g.connect(AC.destination);
+    o.type = type; o.frequency.value = freq;
+    const start = AC.currentTime + t;
+    g.gain.setValueAtTime(vol, start);
+    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    o.start(start); o.stop(start + dur);
+  },
+  tap()       { this._play(600, 'sine', 0.08, 0.25); },
+  select()    { this._play(880, 'sine', 0.07, 0.2); },
+  deselect()  { this._play(440, 'sine', 0.07, 0.2); },
+  correct()   { this._play(880, 'sine', 0.12, 0.35); this._play(1100, 'sine', 0.15, 0.3, 0.1); },
+  wrong()     { this._play(200, 'sawtooth', 0.25, 0.35); },
+  stageClear(){ [523,659,784,1047].forEach((f,i) => this._play(f,'sine',0.2,0.4,i*0.08)); },
+  ending()    { [523,659,784,659,784,1047,1047].forEach((f,i) => this._play(f,'sine',0.22,0.4,i*0.1)); },
+};
+
+// ============================================================
+// 問題生成
+// ============================================================
+function generateProblems(stageIdx) {
+  const dan = STAGES[stageIdx].dan;
+  const typeACount = TYPE_A_COUNTS[stageIdx];
+  const allB = shuffle([1,2,3,4,5,6,7,8,9]);
+  const typeABs = allB.slice(0, typeACount);
+  const typeBBs = allB.slice(typeACount, 5);
+  const problems = [];
+
+  typeABs.forEach(b => {
+    problems.push({ type: 'A', a: dan, b, answer: dan * b });
+  });
+
+  typeBBs.forEach(b => {
+    const product = dan * b;
+    const pair = findFactorPair(product, dan);
+    if (pair) {
+      problems.push({ type: 'B', product, f1: pair[0], f2: pair[1] });
+    } else {
+      problems.push({ type: 'A', a: dan, b, answer: product });
+    }
+  });
+
+  return shuffle(problems);
+}
+
+function findFactorPair(product, preferFactor) {
+  if (product % preferFactor === 0) {
+    const other = product / preferFactor;
+    if (other >= 1 && other <= 9) {
+      return [Math.min(preferFactor, other), Math.max(preferFactor, other)];
+    }
+  }
+  for (let f1 = 1; f1 <= 9; f1++) {
+    if (product % f1 === 0) {
+      const f2 = product / f1;
+      if (f2 >= 1 && f2 <= 9) return [f1, f2];
+    }
+  }
+  return null;
+}
+
+// ============================================================
+// 手札生成
+// ============================================================
+function makeTypeAHand(a, b) {
+  const answer = a * b;
+  const pool = new Set();
+  for (let da = Math.max(1, a - 2); da <= Math.min(9, a + 2); da++) {
+    for (let db = 1; db <= 9; db++) {
+      const v = da * db;
+      if (v !== answer) pool.add(v);
+    }
+  }
+  const distractors = shuffle([...pool]).slice(0, 4);
+  return shuffle([answer, ...distractors]).map(v => ({ value: v, label: String(v) }));
+}
+
+function makeTypeBHand(product, f1, f2) {
+  const pool = [1,2,3,4,5,6,7,8,9].filter(n => n !== f1 && n !== f2);
+  const wrongs = shuffle(pool).slice(0, 3);
+  return shuffle([f1, f2, ...wrongs]).map(v => ({ value: v, label: String(v) }));
+}
+
+// ============================================================
+// イントロ
+// ============================================================
+function showIntro() {
+  gs.introIdx = 0;
+  renderIntroScene();
+  showScreen('intro');
+}
+
+function renderIntroScene() {
+  const scene = INTRO_SCENES[gs.introIdx];
+  document.getElementById('intro-char').textContent = scene.char;
+  const bubble = document.getElementById('intro-text');
+  bubble.textContent = scene.text;
+  bubble.style.animation = 'none';
+  void bubble.offsetHeight;
+  bubble.style.animation = '';
+  const btn = document.getElementById('btn-intro-next');
+  btn.textContent = gs.introIdx < INTRO_SCENES.length - 1 ? 'つぎへ →' : 'はじめよう！';
+}
+
+function onIntroNext() {
+  se.tap();
+  gs.introIdx++;
+  if (gs.introIdx >= INTRO_SCENES.length) {
+    gs.stage = 0;
+    showStageStart();
+  } else {
+    renderIntroScene();
+  }
+}
+
+// ============================================================
+// ステージ開始
+// ============================================================
+function showStageStart() {
+  const s = STAGES[gs.stage];
+  document.getElementById('stage-num-label').textContent = `STAGE ${gs.stage + 1} / 9`;
+  document.getElementById('stage-dan-label').textContent = `${s.dan} の 段`;
+  document.getElementById('stage-enemy-emoji').textContent = s.enemy;
+  document.getElementById('stage-enemy-name-label').textContent = s.name;
+  document.getElementById('stage-kuku-advice').textContent = KUKU_ADVICE[gs.stage];
+  showScreen('stage');
+}
+
+// ============================================================
+// バトル
+// ============================================================
+function startBattle() {
+  gs.playerHP = 3;
+  gs.problems = generateProblems(gs.stage);
+  gs.problemIdx = 0;
+  gs.processing = false;
+
+  const s = STAGES[gs.stage];
+  document.getElementById('battle-stage-label').textContent = `STAGE ${gs.stage + 1}`;
+  document.getElementById('battle-enemy-emoji').textContent = s.enemy;
+  updateHP();
+  showScreen('battle');
+  showProblem();
+}
+
+function showProblem() {
+  const p = gs.problems[gs.problemIdx];
+  gs.selected = [];
+  gs.processing = false;
+
+  if (p.type === 'A') {
+    gs.hand = makeTypeAHand(p.a, p.b);
+    document.getElementById('problem-display').innerHTML =
+      `<span>${p.a}</span> × <span>${p.b}</span> ＝ <span class="q-mark">？</span>`;
+    document.getElementById('problem-hint').textContent = '';
+  } else {
+    gs.hand = makeTypeBHand(p.product, p.f1, p.f2);
+    document.getElementById('problem-display').innerHTML =
+      `<span class="q-mark">？</span> × <span class="q-mark">？</span> ＝ <span>${p.product}</span>`;
+    document.getElementById('problem-hint').textContent = '2まい　えらぼう';
+  }
+
+  document.getElementById('turn-progress').textContent = `もん ${gs.problemIdx + 1} / 5`;
+  renderHand(true);
+  updateSubmitButton();
+}
+
+function renderHand(newCards) {
+  const container = document.getElementById('hand-cards');
+  if (newCards) {
+    container.innerHTML = '';
+    gs.hand.forEach((card, i) => {
+      const el = document.createElement('div');
+      el.className = `card card-${card.value % 10}`;
+      el.textContent = card.label;
+      el.style.animationDelay = `${i * 0.04}s`;
+      el.dataset.idx = i;
+      el.addEventListener('click', () => onCardClick(i));
+      container.appendChild(el);
+    });
+  }
+  container.querySelectorAll('.card').forEach((el, i) => {
+    el.classList.toggle('selected', gs.selected.includes(i));
+    el.classList.remove('correct-hint');
+  });
+}
+
+function onCardClick(idx) {
+  if (gs.processing) return;
+  const p = gs.problems[gs.problemIdx];
+  const maxSelect = p.type === 'A' ? 1 : 2;
+
+  if (gs.selected.includes(idx)) {
+    gs.selected = gs.selected.filter(i => i !== idx);
+    se.deselect();
+  } else if (gs.selected.length < maxSelect) {
+    gs.selected.push(idx);
+    se.select();
+  }
+  renderHand(false);
+  updateSubmitButton();
+}
+
+function updateSubmitButton() {
+  const p = gs.problems[gs.problemIdx];
+  const needed = p.type === 'A' ? 1 : 2;
+  document.getElementById('btn-submit').disabled = gs.selected.length !== needed;
+}
+
+function updateHP() {
+  const hp = gs.playerHP;
+  document.getElementById('hp-hearts').textContent = '❤️'.repeat(hp) + '🖤'.repeat(3 - hp);
+}
+
+// ============================================================
+// 解答
+// ============================================================
+function onSubmit() {
+  if (gs.processing || gs.selected.length === 0) return;
+  gs.processing = true;
+  document.getElementById('btn-submit').disabled = true;
+
+  const p = gs.problems[gs.problemIdx];
+  let correct = false;
+  if (p.type === 'A') {
+    correct = gs.hand[gs.selected[0]].value === p.answer;
+  } else {
+    const v = gs.selected.map(i => gs.hand[i].value);
+    correct = v[0] * v[1] === p.product;
+  }
+
+  const box = document.getElementById('problem-box');
+
+  if (correct) {
+    se.correct();
+    box.classList.add('correct-flash');
+    setTimeout(() => {
+      box.classList.remove('correct-flash');
+      nextProblem();
+    }, 700);
+  } else {
+    se.wrong();
+    gs.playerHP = Math.max(0, gs.playerHP - 1);
+    updateHP();
+    box.classList.add('wrong-flash');
+
+    // 正解カードをハイライト
+    document.getElementById('hand-cards').querySelectorAll('.card').forEach((el, i) => {
+      if (p.type === 'A' && gs.hand[i].value === p.answer) {
+        el.classList.add('correct-hint');
+      } else if (p.type === 'B' && (gs.hand[i].value === p.f1 || gs.hand[i].value === p.f2)) {
+        el.classList.add('correct-hint');
+      }
+    });
+
+    setTimeout(() => {
+      box.classList.remove('wrong-flash');
+      if (gs.playerHP <= 0) {
+        showScreen('gameover');
+      } else {
+        showProblem();
+      }
+    }, 1500);
+  }
+}
+
+function nextProblem() {
+  gs.problemIdx++;
+  if (gs.problemIdx >= gs.problems.length) {
+    se.stageClear();
+    document.getElementById('clear-kuku-text').textContent = CLEAR_MESSAGES[gs.stage];
+    const btn = document.getElementById('btn-next-stage');
+    btn.textContent = gs.stage >= STAGES.length - 1 ? 'エンディング！ 🎉' : 'つぎへ →';
+    showScreen('clear');
+  } else {
+    showProblem();
+  }
+}
+
+// ============================================================
+// イベントリスナー
+// ============================================================
+document.getElementById('btn-start').addEventListener('click', () => { se.tap(); showIntro(); });
+document.getElementById('btn-intro-next').addEventListener('click', onIntroNext);
+document.getElementById('btn-stage-start').addEventListener('click', () => { se.tap(); startBattle(); });
+document.getElementById('btn-submit').addEventListener('click', onSubmit);
+document.getElementById('btn-retry').addEventListener('click', () => { se.tap(); showStageStart(); });
+document.getElementById('btn-next-stage').addEventListener('click', () => {
+  gs.stage++;
+  if (gs.stage >= STAGES.length) {
+    se.ending();
+    showScreen('ending');
+  } else {
+    se.tap();
+    showStageStart();
+  }
+});
+</script>
+</body>
+</html>
