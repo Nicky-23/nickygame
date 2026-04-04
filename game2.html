@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ジーのお買い物</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Hiragino Kaku Gothic Pro", "ヒラギノ角ゴ Pro", "Meiryo", "メイリオ", "Yu Gothic", "游ゴシック", sans-serif;
+      background: #1a1a2e;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #game {
+      width: 100%;
+      max-width: 480px;
+      height: 100dvh;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    .screen.active { display: flex; }
+
+    /* ===== タイトル ===== */
+    #screen-title {
+      background: linear-gradient(160deg, #a8edea 0%, #fed6e3 100%);
+      justify-content: center;
+      gap: 16px;
+      padding: 40px 24px;
+    }
+    .btn-back-link {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: rgba(0,0,0,0.12);
+      color: #5f27cd;
+      border-radius: 20px;
+      text-decoration: none;
+    }
+    .title-char { font-size: 80px; line-height: 1; }
+    .title-name {
+      font-size: clamp(1.6rem, 6vw, 2.2rem);
+      font-weight: 900;
+      color: #5f27cd;
+      letter-spacing: 0.04em;
+    }
+    .title-sub { font-size: 0.95rem; color: rgba(95,39,205,0.7); }
+
+    .btn-start {
+      margin-top: 8px;
+      padding: 18px 48px;
+      font-size: 1.4rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #f9ca24, #f0932b);
+      color: #fff;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(240,147,43,0.4);
+      letter-spacing: 0.05em;
+      transition: transform 0.1s;
+    }
+    .btn-start:active { transform: scale(0.95); }
+
+    /* ===== ストーリー ===== */
+    #screen-story {
+      background: linear-gradient(160deg, #a8edea 0%, #fed6e3 100%);
+      justify-content: center;
+      gap: 12px;
+      padding: 32px 24px;
+    }
+    .story-char {
+      font-size: 72px;
+      line-height: 1;
+      animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .story-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: rgba(95,39,205,0.8);
+      margin-top: -4px;
+    }
+    .story-bubble {
+      background: #fff;
+      border-radius: 20px;
+      padding: 20px 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 340px;
+      width: 100%;
+      text-align: center;
+    }
+    .story-text {
+      font-size: 1.05rem;
+      color: #2d3436;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+    .story-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .story-item-emoji { font-size: 3rem; }
+    .story-item-count {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #e17055;
+    }
+    .btn-to-shop {
+      padding: 16px 40px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+      color: #fff;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(108,92,231,0.4);
+      letter-spacing: 0.05em;
+      transition: transform 0.1s;
+    }
+    .btn-to-shop:active { transform: scale(0.95); }
+
+    /* ===== ショップ ===== */
+    #screen-shop {
+      background: linear-gradient(160deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    .shop-header {
+      width: 100%;
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .mission-text {
+      font-size: clamp(0.85rem, 3.5vw, 1rem);
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+    }
+    .basket-badge {
+      background: #f9ca24;
+      color: #2d3436;
+      font-size: 1rem;
+      font-weight: 900;
+      padding: 4px 14px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .store-section {
+      flex: 1;
+      width: 100%;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+    }
+    .section-label {
+      font-size: 0.8rem;
+      color: #636e72;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .store-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .store-item {
+      font-size: 2.8rem;
+      width: 68px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .store-item.dragging { opacity: 0.35; transform: scale(0.9); }
+    .store-item.empty-slot {
+      background: rgba(0,0,0,0.05);
+      box-shadow: none;
+      border: 2px dashed rgba(0,0,0,0.12);
+      cursor: default;
+    }
+
+    .basket-section {
+      width: 100%;
+      background: #fff;
+      border-top: 3px dashed #a29bfe;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .basket-drop-zone {
+      width: 100%;
+      min-height: 76px;
+      background: #f8f0ff;
+      border: 3px dashed #d4b5ff;
+      border-radius: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .basket-drop-zone.drag-over {
+      background: #e8d5ff;
+      border-color: #6c5ce7;
+      border-style: solid;
+    }
+    .basket-drop-zone.wrong-drop {
+      background: #ffe0e0;
+      border-color: #ff7675;
+      border-style: solid;
+      animation: shake 0.4s ease;
+    }
+    .basket-drop-zone.empty::before {
+      content: "ここに　ドラッグしてね　🛒";
+      color: #b2a0cc;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .basket-item {
+      font-size: 2rem;
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(108,92,231,0.2);
+      cursor: pointer;
+      animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: transform 0.1s;
+      position: relative;
+    }
+    .basket-item::after {
+      content: "✕";
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 18px;
+      height: 18px;
+      background: #ff7675;
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 900;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 18px;
+      text-align: center;
+    }
+    .basket-item:active { transform: scale(0.9); }
+
+    .btn-check {
+      width: 100%;
+      max-width: 260px;
+      padding: 13px;
+      font-size: 1.15rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #00b894, #00cec9);
+      color: #fff;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,184,148,0.4);
+      letter-spacing: 0.05em;
+      transition: transform 0.1s;
+    }
+    .btn-check:active { transform: scale(0.97); }
+
+    /* ===== 結果 ===== */
+    #screen-result {
+      background: linear-gradient(160deg, #a8edea 0%, #fed6e3 100%);
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .result-icon { font-size: 72px; animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .result-title { font-size: clamp(1.6rem, 6vw, 2rem); font-weight: 900; }
+    .result-title.correct { color: #00b894; }
+    .result-title.wrong   { color: #e17055; }
+    .result-sub { font-size: 0.95rem; color: #636e72; white-space: pre-wrap; line-height: 1.6; }
+    .result-detail-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 300px;
+    }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+      color: #2d3436;
+      padding: 4px 0;
+    }
+    .btn-result-next {
+      padding: 16px 40px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      color: #fff;
+      transition: transform 0.1s;
+    }
+    .btn-result-next:active { transform: scale(0.95); }
+    .btn-result-next.correct {
+      background: linear-gradient(135deg, #f9ca24, #f0932b);
+      box-shadow: 0 6px 20px rgba(240,147,43,0.4);
+    }
+    .btn-result-next.wrong {
+      background: linear-gradient(135deg, #fd79a8, #e84393);
+      box-shadow: 0 6px 20px rgba(253,121,168,0.4);
+    }
+
+    /* ===== エンディング ===== */
+    #screen-ending {
+      background: linear-gradient(160deg, #a8edea 0%, #fed6e3 100%);
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .ending-char   { font-size: 80px; animation: bounce 1.5s ease-in-out infinite; }
+    .ending-title  { font-size: clamp(1.4rem, 5vw, 1.8rem); font-weight: 900; color: #5f27cd; }
+    .ending-bar-msg { font-size: 1.8rem; }
+    .btn-ending-home {
+      padding: 12px 28px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      background: rgba(0,0,0,0.1);
+      color: #5f27cd;
+      border-radius: 24px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ===== ラウンドドット ===== */
+    .round-dots { display: flex; gap: 6px; }
+    .round-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+    }
+    .round-dot.done    { background: #f9ca24; }
+    .round-dot.current { background: #fff; transform: scale(1.3); }
+
+    /* ===== ドラッグゴースト ===== */
+    #drag-ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      font-size: 2.8rem;
+      width: 68px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      transform: scale(1.15);
+      display: none;
+    }
+
+    /* ===== アニメーション ===== */
+    @keyframes pop {
+      0%   { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-14px); }
+    }
+    .title-char-wrap {
+      position: relative;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .title-bubble {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #5f27cd;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      margin-bottom: 8px;
+      animation: pop 0.5s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+    .title-bubble::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 100%;
+      transform: translateX(-50%);
+      border: 8px solid transparent;
+      border-top-color: #fff;
+    }
+  </style>
+</head>
+<body>
+<div id="game">
+
+  <!-- タイトル -->
+  <div id="screen-title" class="screen active">
+    <a class="btn-back-link" href="index.html">🏠 もどる</a>
+    <div class="title-char-wrap">
+      <div class="title-bubble">ワシの名前はジー・スーじゃ！</div>
+      <div class="title-char">👴</div>
+    </div>
+    <div class="title-name">ジーのお買い物</div>
+    <div class="title-sub">かずを　おぼえて　おかいもの！</div>
+    <button class="btn-start" id="btn-start">はじめる！</button>
+  </div>
+
+  <!-- ストーリー（バーから依頼） -->
+  <div id="screen-story" class="screen">
+    <div class="round-dots" id="story-dots"></div>
+    <div class="story-char" id="story-char">👵</div>
+    <div class="story-name">バー</div>
+    <div class="story-bubble">
+      <p class="story-text" id="story-text"></p>
+      <div class="story-item-row">
+        <span class="story-item-emoji" id="story-emoji"></span>
+        <span class="story-item-count" id="story-count"></span>
+      </div>
+    </div>
+    <button class="btn-to-shop" id="btn-to-shop">おかいものへ！ 🛒</button>
+  </div>
+
+  <!-- ショップ -->
+  <div id="screen-shop" class="screen">
+    <div class="shop-header">
+      <div>
+        <div class="mission-text" id="mission-text"></div>
+        <div class="round-dots" id="shop-dots" style="margin-top:4px"></div>
+      </div>
+      <div class="basket-badge" id="basket-badge">0 / ?</div>
+    </div>
+    <div class="store-section">
+      <div class="section-label">🏪 おみせ</div>
+      <div class="store-items" id="store-items"></div>
+    </div>
+    <div class="basket-section">
+      <div class="section-label">🛒 かご（タップで　はずせるよ）</div>
+      <div class="basket-drop-zone empty" id="basket-zone"></div>
+      <button class="btn-check" id="btn-check">けってい！ ✅</button>
+    </div>
+  </div>
+
+  <!-- 結果 -->
+  <div id="screen-result" class="screen">
+    <div class="result-icon" id="result-icon">🎉</div>
+    <div class="result-title" id="result-title"></div>
+    <div class="result-sub" id="result-sub"></div>
+    <div class="result-detail-box" id="result-detail-box"></div>
+    <button class="btn-result-next" id="btn-result-next"></button>
+  </div>
+
+  <!-- エンディング -->
+  <div id="screen-ending" class="screen">
+    <div class="ending-char">👴</div>
+    <div class="ending-title">おかいもの　かんりょう！ 🎉</div>
+    <div class="ending-bar-msg">👵 「ありがとう　ジー！」</div>
+    <button class="btn-start" id="btn-replay">もう一度！</button>
+    <a class="btn-ending-home" href="index.html">🏠 もどる</a>
+  </div>
+
+</div>
+
+<div id="drag-ghost"></div>
+
+<script>
+'use strict';
+
+// ============================================================
+// 定数
+// ============================================================
+const ITEMS = [
+  { emoji: '🍎', name: 'りんご' },
+  { emoji: '🍌', name: 'バナナ' },
+  { emoji: '🍊', name: 'みかん' },
+  { emoji: '🍇', name: 'ぶどう' },
+  { emoji: '🥕', name: 'にんじん' },
+  { emoji: '🥦', name: 'ブロッコリー' },
+  { emoji: '🍓', name: 'いちご' },
+  { emoji: '🍑', name: 'もも' },
+  { emoji: '🌽', name: 'とうもろこし' },
+  { emoji: '🍋', name: 'レモン' },
+];
+
+const ROUND_RANGES = [
+  { min: 1, max: 3  },
+  { min: 1, max: 6  },
+  { min: 1, max: 10 },
+];
+
+// ============================================================
+// 状態
+// ============================================================
+const gs = { round: 0, rounds: [], basket: [] };
+
+// ============================================================
+// ユーティリティ
+// ============================================================
+const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function renderDots(id, current) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const d = document.createElement('div');
+    d.className = 'round-dot' + (i < current ? ' done' : i === current ? ' current' : '');
+    el.appendChild(d);
+  }
+}
+
+// ============================================================
+// ゲーム開始
+// ============================================================
+function startGame() {
+  const items = shuffle(ITEMS).slice(0, 3);
+  gs.rounds = ROUND_RANGES.map((r, i) => ({
+    item: items[i],
+    count: rnd(r.min, r.max),
+  }));
+  gs.round = 0;
+  showStory();
+}
+
+// ============================================================
+// ストーリー画面
+// ============================================================
+function showStory() {
+  const r = gs.rounds[gs.round];
+  renderDots('story-dots', gs.round);
+  document.getElementById('story-char').textContent = '👵';
+  document.getElementById('story-text').textContent =
+    `ジー、たのんだよ！\n${r.item.name}を　かってきてね。`;
+  document.getElementById('story-emoji').textContent = r.item.emoji;
+  document.getElementById('story-count').textContent = `× ${r.count}こ`;
+  showScreen('story');
+}
+
+// ============================================================
+// ショップ画面
+// ============================================================
+function showShop() {
+  gs.basket = [];
+  const r = gs.rounds[gs.round];
+  renderDots('shop-dots', gs.round);
+  document.getElementById('mission-text').textContent =
+    `${r.item.emoji} ${r.item.name}を　${r.count}こ　いれよう！`;
+  renderStore();
+  renderBasket();
+  showScreen('shop');
+}
+
+function renderStore() {
+  const r = gs.rounds[gs.round];
+  const container = document.getElementById('store-items');
+  container.innerHTML = '';
+
+  // ターゲット×10 + ランダムなじゃまもの×2種 をシャッフル
+  const distractors = shuffle(ITEMS.filter(i => i.emoji !== r.item.emoji))
+    .slice(0, 2)
+    .map(i => i.emoji);
+  const pool = shuffle([
+    ...Array(10).fill(r.item.emoji),
+    ...distractors,
+    ...distractors,
+  ]);
+
+  pool.forEach(emoji => {
+    const el = document.createElement('div');
+    el.className = 'store-item';
+    el.textContent = emoji;
+    el.dataset.emoji = emoji;
+    container.appendChild(el);
+  });
+  initDrag();
+}
+
+function renderBasket() {
+  const r = gs.rounds[gs.round];
+  const zone = document.getElementById('basket-zone');
+  zone.innerHTML = '';
+  if (gs.basket.length === 0) {
+    zone.classList.add('empty');
+  } else {
+    zone.classList.remove('empty');
+    gs.basket.forEach((emoji, idx) => {
+      const el = document.createElement('div');
+      el.className = 'basket-item';
+      el.textContent = emoji;
+      el.addEventListener('click', () => { gs.basket.splice(idx, 1); renderBasket(); returnToStore(emoji); });
+      zone.appendChild(el);
+    });
+  }
+  document.getElementById('basket-badge').textContent =
+    `${gs.basket.length} / ${r.count}`;
+}
+
+function returnToStore(emoji) {
+  const slot = document.querySelector('.store-item.empty-slot');
+  if (!slot) return;
+  slot.textContent = emoji;
+  slot.dataset.emoji = emoji;
+  slot.classList.remove('empty-slot');
+  slot.addEventListener('pointerdown', onPointerDown);
+}
+
+// ============================================================
+// ドラッグ & ドロップ（ポインターイベント）
+// ============================================================
+let dragState = null;
+const ghost = document.getElementById('drag-ghost');
+
+function initDrag() {
+  document.querySelectorAll('.store-item').forEach(el => {
+    el.addEventListener('pointerdown', onPointerDown);
+  });
+}
+
+function onPointerDown(e) {
+  e.preventDefault();
+  const el = e.currentTarget;
+  el.setPointerCapture(e.pointerId);
+
+  ghost.textContent = el.dataset.emoji;
+  ghost.style.display = 'flex';
+  moveGhost(e.clientX, e.clientY);
+  el.classList.add('dragging');
+
+  dragState = { el, emoji: el.dataset.emoji };
+  el.addEventListener('pointermove', onPointerMove);
+  el.addEventListener('pointerup',   onPointerUp);
+  el.addEventListener('pointercancel', onPointerUp);
+}
+
+function onPointerMove(e) {
+  e.preventDefault();
+  moveGhost(e.clientX, e.clientY);
+  const zone = document.getElementById('basket-zone');
+  const over = isOver(e.clientX, e.clientY, zone.getBoundingClientRect());
+  zone.classList.toggle('drag-over', over);
+}
+
+function onPointerUp(e) {
+  if (!dragState) return;
+  ghost.style.display = 'none';
+  dragState.el.classList.remove('dragging');
+
+  const zone = document.getElementById('basket-zone');
+  zone.classList.remove('drag-over');
+
+  if (isOver(e.clientX, e.clientY, zone.getBoundingClientRect())) {
+    if (dragState.emoji === gs.rounds[gs.round].item.emoji) {
+      if (gs.basket.length < 10) {
+        gs.basket.push(dragState.emoji);
+        dragState.el.textContent = '';
+        dragState.el.classList.add('empty-slot');
+        dragState.el.removeEventListener('pointerdown', onPointerDown);
+        renderBasket();
+        se.drop();
+      }
+    } else {
+      // ちがうアイテム → かごをシェイク
+      zone.classList.add('wrong-drop');
+      setTimeout(() => zone.classList.remove('wrong-drop'), 500);
+      se.wrong();
+    }
+  }
+
+  dragState.el.removeEventListener('pointermove', onPointerMove);
+  dragState.el.removeEventListener('pointerup',   onPointerUp);
+  dragState.el.removeEventListener('pointercancel', onPointerUp);
+  dragState = null;
+}
+
+function moveGhost(x, y) {
+  ghost.style.left = (x - 34) + 'px';
+  ghost.style.top  = (y - 34) + 'px';
+}
+
+function isOver(x, y, rect) {
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+}
+
+// ============================================================
+// けってい
+// ============================================================
+function checkAnswer() {
+  const r = gs.rounds[gs.round];
+  const correct = gs.basket.length === r.count;
+
+  document.getElementById('result-icon').textContent  = correct ? '🎉' : '🤔';
+  const title = document.getElementById('result-title');
+  title.textContent  = correct ? 'ぴったり！' : 'もうすこし！';
+  title.className    = 'result-title ' + (correct ? 'correct' : 'wrong');
+
+  const sub = document.getElementById('result-sub');
+  sub.textContent = correct
+    ? 'すごい！　よくできました！'
+    : `${r.item.name}は　${r.count}こ　ほしかったよ。\nかごに　${gs.basket.length}こ　あったね。`;
+
+  document.getElementById('result-detail-box').innerHTML = `
+    <div class="result-row">
+      <span>${r.item.emoji} ほしい　かず</span>
+      <strong>${r.count}こ</strong>
+    </div>
+    <div class="result-row">
+      <span>🛒 かごの　かず</span>
+      <strong>${gs.basket.length}こ</strong>
+    </div>
+  `;
+
+  const btn = document.getElementById('btn-result-next');
+  btn.className = 'btn-result-next ' + (correct ? 'correct' : 'wrong');
+
+  if (correct) {
+    se.ok();
+    btn.textContent = gs.round < 2 ? 'つぎの　おつかい！ →' : 'かんりょう！ 🎉';
+    btn.onclick = () => {
+      se.tap();
+      gs.round++;
+      if (gs.round >= 3) { se.end(); showScreen('ending'); }
+      else showStory();
+    };
+  } else {
+    se.miss();
+    btn.textContent = 'もう一度！';
+    btn.onclick = () => { se.tap(); showShop(); };
+  }
+
+  showScreen('result');
+}
+
+// ============================================================
+// SE (Web Audio API)
+// ============================================================
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+function resumeAC() { if (AC.state === 'suspended') AC.resume(); }
+
+const se = {
+  _play(freq, type, dur, vol = 0.4, t = 0) {
+    resumeAC();
+    const o = AC.createOscillator();
+    const g = AC.createGain();
+    o.connect(g); g.connect(AC.destination);
+    o.type = type; o.frequency.value = freq;
+    const start = AC.currentTime + t;
+    g.gain.setValueAtTime(vol, start);
+    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    o.start(start); o.stop(start + dur);
+  },
+  tap()  { this._play(600, 'sine', 0.08, 0.25); },
+  drop() { this._play(880, 'sine', 0.12, 0.35); this._play(1100, 'sine', 0.12, 0.3, 0.07); },
+  wrong(){ this._play(220, 'sawtooth', 0.2, 0.3); },
+  ok()   { [523,659,784,1047].forEach((f,i) => this._play(f,'sine',0.18,0.4,i*0.08)); },
+  miss() { [400,320,260].forEach((f,i) => this._play(f,'triangle',0.2,0.3,i*0.1)); },
+  end()  { [523,659,784,659,784,1047,1047].forEach((f,i) => this._play(f,'sine',0.22,0.4,i*0.1)); },
+};
+
+// ============================================================
+// イベントリスナー
+// ============================================================
+document.getElementById('btn-start').addEventListener('click', () => { se.tap(); startGame(); });
+document.getElementById('btn-replay').addEventListener('click', () => { se.tap(); startGame(); });
+document.getElementById('btn-to-shop').addEventListener('click', () => { se.tap(); showShop(); });
+document.getElementById('btn-check').addEventListener('click', checkAnswer);
+</script>
+</body>
+</html>
