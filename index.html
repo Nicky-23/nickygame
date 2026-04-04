@@ -411,10 +411,11 @@
       width: 100%;
       max-width: 320px;
       padding: 16px;
-      font-size: 1.5rem;
+      font-size: clamp(1.1rem, 4.5vw, 1.5rem);
       font-weight: 900;
       border-radius: 16px;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
       transition: transform 0.1s, box-shadow 0.1s, opacity 0.2s;
       color: #fff;
     }
@@ -729,12 +730,12 @@
     }
     #pitari-overlay.hidden { display: none; }
     .pitari-burst {
-      font-size: 3.5rem;
+      font-size: clamp(2.2rem, 8vw, 3.5rem);
       font-weight: 900;
       color: #fff;
       text-shadow: 0 0 40px #feca57, 0 0 80px #f0932b;
       animation: starBurst 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.75);
       padding: 20px 40px;
       border-radius: 24px;
       border: 3px solid #feca57;
@@ -815,13 +816,174 @@
     }
 
     /* ===== レスポンシブ ===== */
-    @media (max-width: 360px) {
+    @media (max-width: 390px) {
       .card { width: 54px; height: 78px; font-size: 2rem; }
       .cards-row { gap: 5px; }
       .title-text { font-size: 2.2rem; }
+      .sum-preview { font-size: 1.2rem; }
+      .coin-reward { font-size: 1.5rem; }
+      .victory-title { font-size: 2rem; }
+      .gameover-title { font-size: 2rem; }
+      .btn-next { font-size: 1.3rem; letter-spacing: 0.05em; }
+    }
+    @media (max-width: 360px) {
+      .title-text { font-size: 2rem; }
+      .victory-title { font-size: 1.8rem; }
+      .gameover-title { font-size: 1.8rem; }
     }
     @media (min-height: 700px) {
       .enemy-emoji { font-size: 110px; }
+    }
+
+    /* ===== ターンタイマー ===== */
+    .turn-timer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      border: 4px solid rgba(255,255,255,0.3);
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      transition: background 0.4s, border-color 0.4s;
+      flex-shrink: 0;
+    }
+    .turn-timer.timer-ok   { border-color: #1dd1a1; }
+    .turn-timer.timer-warn { border-color: #feca57; background: rgba(254,202,87,0.2); }
+    .turn-timer.timer-danger {
+      border-color: #ff6b6b;
+      background: rgba(255,107,107,0.3);
+      animation: pulse 0.5s ease-in-out infinite;
+    }
+    .turn-timer-num   { font-size: 1.9rem; font-weight: 900; line-height: 1; }
+    .turn-timer-label { font-size: 0.65rem; opacity: 0.8; margin-top: 1px; }
+
+    /* ===== オープニング画面 ===== */
+    #screen-opening {
+      position: relative;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+    }
+    .opening-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      transition: background 0.5s ease;
+    }
+    .opening-bg.bg-world0  { background: linear-gradient(160deg, #a8e063 0%, #56ab2f 100%); }
+    .opening-bg.bg-world4  { background: linear-gradient(160deg, #0f0c29 0%, #302b63 100%); }
+    .opening-bg.bg-golden  { background: linear-gradient(160deg, #f9ca24 0%, #f0932b 100%); }
+    .opening-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .opening-char {
+      font-size: 96px;
+      line-height: 1;
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.35));
+    }
+    .opening-char.slide-in-left  { animation: openingEnterL 0.45s cubic-bezier(0.175,0.885,0.32,1.275) both; }
+    .opening-char.slide-in-right { animation: openingEnterR 0.45s cubic-bezier(0.175,0.885,0.32,1.275) both; }
+    .opening-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.95);
+      background: rgba(0,0,0,0.4);
+      padding: 4px 18px;
+      border-radius: 20px;
+      letter-spacing: 0.08em;
+    }
+    .opening-bubble {
+      background: rgba(0,0,0,0.55);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      padding: 20px 24px;
+      width: 100%;
+      min-height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .opening-text {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.85;
+      text-align: center;
+      letter-spacing: 0.04em;
+      white-space: pre-wrap;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    }
+    .opening-dots {
+      display: flex;
+      gap: 10px;
+    }
+    .opening-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      transition: background 0.25s, transform 0.25s;
+    }
+    .opening-dot.active {
+      background: #fff;
+      transform: scale(1.3);
+    }
+    .btn-opening-skip {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 2;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.85);
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.3);
+      transition: background 0.15s;
+    }
+    .btn-opening-skip:hover { background: rgba(255,255,255,0.3); }
+    .btn-opening-next {
+      padding: 14px 44px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #48dbfb, #0652DD);
+      color: #fff;
+      border-radius: 50px;
+      box-shadow: 0 6px 20px rgba(72,219,251,0.45);
+      letter-spacing: 0.08em;
+      transition: transform 0.12s;
+    }
+    .btn-opening-next:hover  { transform: scale(1.05); }
+    .btn-opening-next:active { transform: scale(0.97); }
+    .btn-opening-next:disabled { opacity: 0.5; cursor: default; transform: none; }
+    @keyframes openingEnterL {
+      0%   { transform: translateX(-80px) scale(0.7); opacity: 0; }
+      100% { transform: translateX(0)     scale(1);   opacity: 1; }
+    }
+    @keyframes openingEnterR {
+      0%   { transform: translateX(80px) scale(0.7); opacity: 0; }
+      100% { transform: translateX(0)    scale(1);   opacity: 1; }
+    }
+    .hero-img {
+      width: 200px;
+      height: 200px;
+      object-fit: contain;
+    }
+    .opening-char-img {
+      width: 160px;
+      height: 160px;
+      object-fit: contain;
     }
   </style>
 </head>
@@ -831,7 +993,7 @@
   <!-- ===== タイトル画面 ===== -->
   <div id="screen-title" class="screen active">
     <div class="title-stars" id="title-stars"></div>
-    <div class="title-hero">🧙</div>
+    <div class="title-hero"><img src="image/san1.png" class="hero-img" alt="サン"></div>
     <div class="title-text"><span class="title-rainbow">サンの冒険</span></div>
     <div class="title-sub">かずカードで　てきをたおそう！</div>
     <div class="difficulty-label">なんいどを　えらんでね！</div>
@@ -855,6 +1017,21 @@
     <div class="title-bottom">
       <button class="btn-secondary" id="btn-howto">📖 あそびかた</button>
       <button class="btn-secondary mute-btn" id="btn-mute-title">🔊</button>
+    </div>
+  </div>
+
+  <!-- ===== オープニング画面 ===== -->
+  <div id="screen-opening" class="screen">
+    <div class="opening-bg" id="opening-bg"></div>
+    <button class="btn-opening-skip" id="btn-opening-skip">スキップ ▶▶</button>
+    <div class="opening-content">
+      <div class="opening-char" id="opening-char"></div>
+      <div class="opening-name" id="opening-name"></div>
+      <div class="opening-bubble">
+        <p class="opening-text" id="opening-text"></p>
+      </div>
+      <div class="opening-dots" id="opening-dots"></div>
+      <button class="btn-opening-next" id="btn-opening-next">つぎへ ▶</button>
     </div>
   </div>
 
@@ -882,7 +1059,10 @@
     </div>
     <div class="battle-middle">
       <div class="sum-preview" id="sum-preview">2まい　えらんでね</div>
-      <div class="instruction-text">2まいの　カードを　えらぼう！</div>
+      <div class="turn-timer timer-ok" id="turn-timer">
+        <span class="turn-timer-num" id="turn-timer-num">10</span>
+        <span class="turn-timer-label">びょう</span>
+      </div>
       <div class="cards-row" id="cards-row"></div>
     </div>
     <div class="attack-wrap">
@@ -937,7 +1117,7 @@
   <!-- ===== エンディング画面 ===== -->
   <div id="screen-ending" class="screen">
     <div class="confetti-wrap" id="confetti-wrap"></div>
-    <div class="ending-hero">🧙</div>
+    <div class="ending-hero"><img src="image/san.png" class="hero-img" alt="サン"></div>
     <div class="ending-title">🏆 ゲームクリア！！ 🏆</div>
     <div class="ending-sub">
       サンは　ラスボスを　たおし<br>
@@ -996,6 +1176,67 @@ const ENEMIES = [
 const WORLD_NAMES = ['くさはら','まほうのもり','まっくらどうくつ','まおうのしろ','うちゅう'];
 const WORLD_ICONS = ['🌿','🌲','🦇','🏰','🚀'];
 const PITARI_BONUS = 3;
+const TIMER_SECS = { normal: 10, hard: 5 };
+
+let _timerInterval = null;
+
+function startTurnTimer() {
+  stopTurnTimer();
+  const secs = TIMER_SECS[gs.difficulty];
+  const el = document.getElementById('turn-timer');
+  if (!secs) {
+    if (el) el.style.display = 'none';
+    return;
+  }
+  if (el) el.style.display = '';
+  gs.timerRemaining = secs;
+  updateTimerDisplay();
+  _timerInterval = setInterval(onTimerTick, 1000);
+}
+
+function stopTurnTimer() {
+  if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+}
+
+function onTimerTick() {
+  gs.timerRemaining--;
+  updateTimerDisplay();
+  if (gs.timerRemaining > 0) return;
+  // タイムアウト → 敵の攻撃 → 新しい手札
+  stopTurnTimer();
+  enemyAttack();
+  if (gs.playerHP <= 0) return;
+  gs.deck = createDeck();
+  gs.hand = drawCards(handSize());
+  gs.selectedCards = [];
+  ensureValidPair();
+  renderCards();
+  renderSumPreview();
+  renderAttackBtn();
+  startTurnTimer();
+}
+
+function updateTimerDisplay() {
+  const el  = document.getElementById('turn-timer');
+  const num = document.getElementById('turn-timer-num');
+  if (!el || !num) return;
+  num.textContent = gs.timerRemaining;
+  el.className = 'turn-timer';
+  if      (gs.timerRemaining <= 3) el.classList.add('timer-danger');
+  else if (gs.timerRemaining <= 6) el.classList.add('timer-warn');
+  else                              el.classList.add('timer-ok');
+}
+
+const OPENING_SCENES = [
+  { char:'<img src="image/san1.png" class="opening-char-img" alt="サン">', name:'サン', enterDir:'left',  bg:'bg-world0',
+    text:'「ぼくの　なまえは　サン・スー。\nすうじのまほうを　つかう\nまほうつかいだよ！」' },
+  { char:'🌑', name:'カオス',     enterDir:'right', bg:'bg-world4',
+    text:'「うわははは！　ワタシが　カオスだ！\nせかいを　まっくらに　してやるぞ！」' },
+  { char:'<img src="image/san1.png" class="opening-char-img" alt="サン">', name:'サン', enterDir:'left',  bg:'bg-world0',
+    text:'「カオスを　たおすぞ！\nかずカードの　ちからで\nてきを　やっつけるんだ！」' },
+  { char:'⭐', name:'ナビィ',     enterDir:'left',  bg:'bg-golden',
+    text:'「2まいの　カードを　えらんで、\nごうけいを　てきの　HPに　あわせよう！\nぴったりが　ねらいめだよ！\nがんばれ　サン！」' },
+];
 
 const SHOP_ITEMS = [
   { id:'medicine',  emoji:'💊', name:'ハートのくすり', cost:5,  desc:'HPを 2 かいふくする',     effect:'healHP',      value:2  },
@@ -1029,6 +1270,8 @@ function defaultState(difficulty = 'normal') {
     inventory: { amulet:false, attackUp:false, luckyStar:false },
     shopUpgrades: { maxHPBonus:0 },
     stats: { defeated:0, totalCoins:0, pitari:0 },
+    openingIdx: 0,
+    timerRemaining: 0,
   };
 }
 
@@ -1333,6 +1576,7 @@ function onCardClick(e) {
 
 function doAttack() {
   if (gs.selectedCards.length < 2) return;
+  stopTurnTimer();
   initAudio();
 
   const [i1, i2] = gs.selectedCards;
@@ -1374,7 +1618,10 @@ function doAttack() {
       onEnemyDefeated(isPitari, sum + bonus);
     } else {
       // 敵の反撃
-      setTimeout(() => enemyAttack(), isPitari ? 800 : 400);
+      setTimeout(() => {
+        enemyAttack();
+        if (gs.playerHP > 0) startTurnTimer();
+      }, isPitari ? 800 : 400);
     }
   }, isPitari ? 1000 : 300);
 }
@@ -1423,6 +1670,7 @@ function enemyAttack() {
 }
 
 function onEnemyDefeated(isPitari, dmgDealt) {
+  stopTurnTimer();
   gs.stats.defeated++;
   SFX.victory();
 
@@ -1497,6 +1745,88 @@ function startBattle() {
   initHand();
   renderBattle();
   showScreen('battle');
+  startTurnTimer();
+}
+
+// ============================================================
+// オープニング
+// ============================================================
+let _twTimer = null;
+
+function showOpening() {
+  gs.openingIdx = 0;
+  showScreen('opening');
+  renderOpeningScene(0);
+}
+
+function renderOpeningScene(idx) {
+  const scene = OPENING_SCENES[idx];
+  if (!scene) return;
+
+  // 背景
+  const bg = document.getElementById('opening-bg');
+  bg.className = 'opening-bg ' + scene.bg;
+
+  // キャラ（アニメーションリセット→再生）
+  const charEl = document.getElementById('opening-char');
+  charEl.className = 'opening-char';
+  charEl.innerHTML = scene.char;
+  void charEl.offsetWidth;
+  charEl.classList.add(scene.enterDir === 'right' ? 'slide-in-right' : 'slide-in-left');
+
+  // 名前
+  document.getElementById('opening-name').textContent = scene.name;
+
+  // テキストクリア
+  document.getElementById('opening-text').textContent = '';
+
+  // 進行ドット
+  const dotsEl = document.getElementById('opening-dots');
+  dotsEl.innerHTML = '';
+  OPENING_SCENES.forEach((_, i) => {
+    const dot = document.createElement('span');
+    dot.className = 'opening-dot' + (i === idx ? ' active' : '');
+    dotsEl.appendChild(dot);
+  });
+
+  // ボタン無効化（タイプライター中）
+  const btn = document.getElementById('btn-opening-next');
+  btn.disabled = true;
+
+  // タイプライター
+  if (_twTimer) clearInterval(_twTimer);
+  const full = scene.text;
+  let ci = 0;
+  const textEl = document.getElementById('opening-text');
+  _twTimer = setInterval(() => {
+    ci++;
+    textEl.textContent = full.slice(0, ci);
+    if (ci >= full.length) {
+      clearInterval(_twTimer);
+      _twTimer = null;
+      btn.disabled = false;
+    }
+  }, 55);
+}
+
+function onOpeningNext() {
+  initAudio();
+  SFX.btn();
+  // タイプライター中 → スキップして全文表示（2段階）
+  if (_twTimer) {
+    clearInterval(_twTimer);
+    _twTimer = null;
+    document.getElementById('opening-text').textContent = OPENING_SCENES[gs.openingIdx].text;
+    document.getElementById('btn-opening-next').disabled = false;
+    return;
+  }
+  const next = gs.openingIdx + 1;
+  if (next < OPENING_SCENES.length) {
+    gs.openingIdx = next;
+    renderOpeningScene(next);
+  } else {
+    startBattle();
+  }
 }
 
 function buyItem(itemId) {
@@ -1705,8 +2035,23 @@ document.addEventListener('DOMContentLoaded', () => {
       gs = defaultState(diff);
       gs.muted = muted;
       clearSave();
-      startBattle();
+      showOpening();
     });
+  });
+
+  // オープニング → つぎへ
+  // 画面どこでもクリック → 一括表示 or 次へ（ボタン以外の領域）
+  document.getElementById('screen-opening').addEventListener('click', (e) => {
+    if (e.target.closest('button')) return;
+    onOpeningNext();
+  });
+
+  document.getElementById('btn-opening-next').addEventListener('click', onOpeningNext);
+
+  // スキップボタン → オープニング全スキップ
+  document.getElementById('btn-opening-skip').addEventListener('click', () => {
+    if (_twTimer) { clearInterval(_twTimer); _twTimer = null; }
+    startBattle();
   });
 
   // あそびかた
@@ -1748,10 +2093,11 @@ document.addEventListener('DOMContentLoaded', () => {
     gs.deck = createDeck();
     gs.hand = drawCards(handSize());
     gs.selectedCards = [];
-    if (gs.difficulty === 'easy' || gs.difficulty === 'normal') ensureValidPair();
+    ensureValidPair();
     renderCards();
     renderSumPreview();
     renderAttackBtn();
+    startTurnTimer();
   });
 
   // 勝利 → 次へ
